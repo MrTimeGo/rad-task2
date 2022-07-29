@@ -1,37 +1,91 @@
-﻿using BookAppBackend.Dto;
+﻿using AutoMapper;
+using AutoMapper.QueryableExtensions;
+using BookAppBackend.Data;
+using BookAppBackend.Dto;
+using BookAppBackend.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace BookAppBackend.Services
 {
     public class BookService : IBookService
     {
-        public Task<int> AddBook(BookDto bookDto)
+        private readonly BooksContext context;
+        private readonly IMapper mapper;
+
+        public BookService(BooksContext context, IMapper mapper)
         {
-            throw new NotImplementedException();
+            this.context = context;
+            this.mapper = mapper;
         }
 
-        public Task<bool> DeleteBook(int id)
+        public async Task<int> AddBook(BookDto bookDto)
         {
-            throw new NotImplementedException();
+            var book = mapper.Map<Book>(bookDto);
+            var bookId = (await context.Books.AddAsync(book)).Entity.Id;
+            await context.SaveChangesAsync();
+            return bookId;
         }
 
-        public Task<List<BookOverviewDto>> GetAllBooks(string? order)
+        public async Task<bool> BookExists(int id)
         {
-            throw new NotImplementedException();
+            return await context.Books.AnyAsync(b => b.Id == id);
         }
 
-        public Task<Task<BookDetailedDto>> GetBook(int id)
+        public async Task<bool> DeleteBook(int id)
         {
-            throw new NotImplementedException();
+            var bookToRemove = await context.Books.FirstOrDefaultAsync(b => b.Id == id);
+            if (bookToRemove is null)
+            {
+                return false;
+            }
+
+            context.Books.Remove(bookToRemove);
+            await context.SaveChangesAsync();
+            return true;
         }
 
-        public Task<List<BookOverviewDto>> GetRecommendedBooks(string? genre)
+        public async Task<List<BookOverviewDto>> GetAllBooks(string? order)
         {
-            throw new NotImplementedException();
+            var books = context.Books.ProjectTo<BookOverviewDto>(mapper.ConfigurationProvider);
+            if (order == "title")
+            {
+                books.OrderBy(b => b.Title);
+            }
+            else if (order == "author")
+            {
+                books.OrderBy(b => b.Author);
+            }
+            return await books.ToListAsync();
         }
 
-        public Task<bool> UpdateBook(BookDto bookDto)
+        public async Task<BookDetailedDto?> GetBook(int id)
         {
-            throw new NotImplementedException();
+            return await context.Books.Include(b => b.Reviews)
+                .ProjectTo<BookDetailedDto>(mapper.ConfigurationProvider)
+                .SingleOrDefaultAsync(b => b.Id == id);
+        }
+
+        public async Task<List<BookOverviewDto>> GetRecommendedBooks(string? genre)
+        {
+            const int minNumberOFReviews = 10;
+            const int limit = 10;
+            return await context.Books.ProjectTo<BookOverviewDto>(mapper.ConfigurationProvider)
+                .Where(b => b.ReviewsNumber > minNumberOFReviews)
+                .Take(limit)
+                .ToListAsync();
+        }
+
+        public async Task<bool> UpdateBook(BookDto bookDto)
+        {
+            var oldBook = await context.Books.FirstOrDefaultAsync(b => b.Id == bookDto.Id);
+            if (oldBook is null)
+            {
+                return false;
+            }
+            var updatedBook = mapper.Map(bookDto, oldBook);
+            context.Update(updatedBook);
+            await context.SaveChangesAsync();
+            return true;
         }
     }
 }

@@ -15,6 +15,8 @@ builder.Services.AddDbContext<BooksContext>(options =>
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+builder.Services.AddAutoMapper(typeof(Program));
+
 builder.Services.AddScoped<IBookService, BookService>();
 builder.Services.AddScoped<IRatingService, RatingService>();
 builder.Services.AddScoped<IReviewService, ReviewService>();

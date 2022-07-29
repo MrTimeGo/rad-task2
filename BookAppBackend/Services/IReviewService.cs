@@ -4,6 +4,6 @@ namespace BookAppBackend.Services
 {
     public interface IReviewService
     {
-        public Task<int> SaveReview(ReviewDto reviewDto);
+        public Task<int> SaveReview(int bookId, ReviewDto reviewDto);
     }
 }
