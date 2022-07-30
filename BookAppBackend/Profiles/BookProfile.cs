@@ -14,11 +14,11 @@ namespace BookAppBackend.Profiles
                 .ForMember(dest => dest.ReviewsNumber,
                     option => option.MapFrom(src => src.Reviews!.Count()))
                 .ForMember(dest => dest.Rating,
-                    option => option.MapFrom(src => src.Ratings!.Average(r => r.Score)));
+                    option => option.MapFrom(src => src.Ratings!.Any() ? src.Ratings!.Average(r => r.Score) : 0));
 
             CreateMap<Book, BookDetailedDto>()
                 .ForMember(dest => dest.Rating,
-                    option => option.MapFrom(src => src.Ratings!.Average(r => r.Score)));
+                    option => option.MapFrom(src => src.Ratings!.Any() ? src.Ratings!.Average(r => r.Score) : 0));
         }
     }
 }

@@ -49,11 +49,11 @@ namespace BookAppBackend.Services
             var books = context.Books.ProjectTo<BookOverviewDto>(mapper.ConfigurationProvider);
             if (order == "title")
             {
-                books.OrderBy(b => b.Title);
+                books = books.OrderBy(b => b.Title);
             }
             else if (order == "author")
             {
-                books.OrderBy(b => b.Author);
+                books = books.OrderBy(b => b.Author);
             }
             return await books.ToListAsync();
         }
@@ -69,7 +69,12 @@ namespace BookAppBackend.Services
         {
             const int minNumberOFReviews = 10;
             const int limit = 10;
-            return await context.Books.ProjectTo<BookOverviewDto>(mapper.ConfigurationProvider)
+            var books = context.Books.AsQueryable();
+            if (!string.IsNullOrEmpty(genre))
+            {
+                books = books.Where(b => b.Genre == genre);
+            }
+            return await books.ProjectTo<BookOverviewDto>(mapper.ConfigurationProvider)
                 .Where(b => b.ReviewsNumber > minNumberOFReviews)
                 .Take(limit)
                 .ToListAsync();
