@@ -1,12 +1,17 @@
 using BookAppBackend.Data;
 using BookAppBackend.Services;
+using FluentValidation.AspNetCore;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
-builder.Services.AddControllers();
+builder.Services.AddControllers().AddFluentValidation(fv =>
+{
+    fv.DisableDataAnnotationsValidation = true;
+    fv.RegisterValidatorsFromAssemblyContaining<Program>();
+});
 builder.Services.AddDbContext<BooksContext>(options =>
 {
     options.UseInMemoryDatabase(databaseName: "BooksDatabase");
