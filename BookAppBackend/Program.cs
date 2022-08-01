@@ -1,5 +1,6 @@
 using BookAppBackend.Data;
 using BookAppBackend.Services;
+using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -7,6 +8,14 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 
 builder.Services.AddControllers();
+builder.Services.AddHttpLogging(logging =>
+{
+    logging.LoggingFields = HttpLoggingFields.RequestMethod | 
+        HttpLoggingFields.RequestHeaders | 
+        HttpLoggingFields.RequestQuery | 
+        HttpLoggingFields.RequestBody;
+
+});
 builder.Services.AddDbContext<BooksContext>(options =>
 {
     options.UseInMemoryDatabase(databaseName: "BooksDatabase");
@@ -29,6 +38,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.UseHttpLogging();
 
 app.UseHttpsRedirection();
 
