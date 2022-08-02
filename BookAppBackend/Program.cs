@@ -1,7 +1,9 @@
 using BookAppBackend.Data;
 using BookAppBackend.Services;
+using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.EntityFrameworkCore;
+using static System.Net.Mime.MediaTypeNames;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -40,6 +42,24 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpLogging();
+
+app.UseExceptionHandler(exceptionHandlerApp =>
+{
+    exceptionHandlerApp.Run(async context =>
+    {
+        context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+
+        // using static System.Net.Mime.MediaTypeNames;
+        context.Response.ContentType = Text.Plain;
+
+        var exceptionHandlerPathFeature =
+            context.Features.Get<IExceptionHandlerPathFeature>();
+        if (exceptionHandlerPathFeature is not null)
+        {
+            await context.Response.WriteAsync("An exception was thrown at " + exceptionHandlerPathFeature.Path + ": " + exceptionHandlerPathFeature.Error.Message);
+        }
+    });
+});
 
 app.UseHttpsRedirection();
 
