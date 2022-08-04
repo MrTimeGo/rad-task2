@@ -1,5 +1,6 @@
 using BookAppBackend.Data;
 using BookAppBackend.Services;
+using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.EntityFrameworkCore;
@@ -8,8 +9,11 @@ using static System.Net.Mime.MediaTypeNames;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-
-builder.Services.AddControllers();
+builder.Services.AddControllers().AddFluentValidation(fv =>
+{
+    fv.DisableDataAnnotationsValidation = true;
+    fv.RegisterValidatorsFromAssemblyContaining<Program>();
+});
 builder.Services.AddHttpLogging(logging =>
 {
     logging.LoggingFields = HttpLoggingFields.RequestMethod | 
